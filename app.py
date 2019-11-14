@@ -15,9 +15,9 @@ def header():
 
 # Create file, add header, open file in editor
 def new_note(folder='temp_notes'):
+    folder = NOTES_DIR + folder
     if folder not in os.listdir(NOTES_DIR):
         os.mkdir(folder)
-    folder = NOTES_DIR + folder
     os.chdir(folder)
 
     file_name = dt.today().strftime('%d_%b_%Y-%I:%M') + '.txt'
@@ -32,6 +32,7 @@ def new_note(folder='temp_notes'):
 
 # Print search match, with formatting for matching in line
 def print_match(line, term):
+    line = line.strip()
     search = re.search(term, line)
     if search:
         for x in range(len(line)):
