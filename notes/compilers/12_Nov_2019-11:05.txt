@@ -1,0 +1,105 @@
+
+    ## Tuesday November 12, 2019 ##
+    
+
+Arrays - collection of items of the same size
+
+FP points to first word of AR (for Meggy, can point somewhere else)
+    Only one active FP 
+    Changes on method call/ termination
+
+Ints are 2 byte words, bytes are 1
+    Symbol table points to relative location in AR
+    'Y' means on the stack
+
+Array implementation --> getting the right element when called
+
+Each of these has different implementation
+    1) int array[1:5] m
+        static bounds
+    2) int array[1:k] m
+        unknown upper bound (found during execution)
+    3) int array Q
+    Q: m
+
+1) int array[1:10, 1:5] m
+    we can determine where m[2,3] is at compile time
+    iff array is being stored column-wise or row-wise
+
+    if it's row wise, 
+        base_of_array + (x_index - row_lower_bound) * (width_of_row) + (y_index - col_lower_bound) * (width_of_col)
+
+2) int array[1:A, 1:B] - cannot calculate indices at compiler time, must be at runtime
+    need an array descriptor (= 'dope vector')
+    NEED
+        - size of element
+        - lower bound, dimension 1
+        - upper bound, dimension 1
+        - lower bound, dimension 2
+        - upper bound, dimension 2
+    So we need to allocate array descriptor with array in AR
+    Stored on the stack
+
+3) int array Q; Q:m; new Q;
+    Q is on the heap w/ its descriptor
+    AR using new gives pointer to heap object
+    can compute address using array descriptor
+    EVERYTHING on heap has pointer to it on the stack
+        if it doesnt have a pointer on the stack, it can be garbage collected
+
+=====================Garbage Collection =====================
+
+We are NOT implementing garbage collection with Meggy
+
+Heap storage management
+    No set order of allocations and deallocation
+    allocate elements (malloc)
+    deallocate elements (free)
+
+2 ways to manage heap
+    1) non compaction
+        need free space list
+        first fit or best fit
+        keep track of elements
+    2) compaction
+        move elements together
+        efficient, dont need free space list
+        when move, keep track of points
+
+Preallocated and persist:
+    global variables
+Allocated on runtime stack
+    local variables, parameters
+Allocated on heap
+    objects
+
+Manual memory management
+    programmers handle allocation/deallocation
+Automatic memory management
+    runtime environment reclaims memory
+    garbage is ANYTING we cannot access
+        no pointers to the element (either in another object or on the stack)
+
+It is 'undecidable' if an object is garbage, need 'conservative approximation' 
+
+GC Types
+    Incremental 
+        runs concurrently with program
+        more precise
+    Stop-the-world
+        pause execution to look for garbage
+
+    Compaction
+        move objects around in memory
+    Non-compaction
+        leaves all objects where they originated
+
+Major approaches 
+    Reference counting (incremental)
+        always collecting
+        store a reference count tracking how many pointers exist to the object
+        when refcount==0, unreachable garbage
+            this might decrease other objects refcount and trigger more collection
+    Mark and Sweep (Stop-the-world)
+    Stop and Copy (Stop-the-world)
+    Generational (Stop-the-world)

@@ -15,9 +15,10 @@ def header():
 
 # Create file, add header, open file in editor
 def new_note(folder='temp_notes'):
-    folder = NOTES_DIR + folder
     if folder not in os.listdir(NOTES_DIR):
-        os.mkdir(folder)
+        os.mkdir(NOTES_DIR + folder)
+        
+    folder = NOTES_DIR + folder
     os.chdir(folder)
 
     file_name = dt.today().strftime('%d_%b_%Y-%I:%M') + '.txt'

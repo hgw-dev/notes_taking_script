@@ -1,0 +1,57 @@
+
+    ## Tuesday November 26, 2019 ##
+    
+
+--------Register allocation--------
+
+replace variable accesses by register access
+	fixed set of registers
+	2 simultaneously live (SL) variables cannot be allocated to the same register
+
+1. Identify live variable ranges
+	Use "register interference graph"
+		shows what variables are SL
+
+Register interference graph
+	node for every temporary
+	edge between t1 and t2 if they are SL
+	2 temps can be allocated to the same register if there is no edge connecting them
+
+	nodes can be assigned a color corresponding to the register assigned to the variable
+	a color cannot be linked to the same color in the graph
+
+Graph coloring
+	a 'coloring' of a graph is an assignment of colors to nodes, such that nodes connected by an edge having different colors
+	a graph is k-colorable if 
+
+	Kempe's algorithm for finding a K-coloring of a graph
+		1) find a node with at most K-1 edges and remove from the graph (with its edges)
+			Remember this node on a stack for later stages
+		2) when the simplified subgraph has been colored, add back the node on the top of the stack and assign it a color not taken by one of the adjacent nodes
+		3) spilling- once all nodes have K or more neighbors, pick a node for spilling
+			store on the stack
+
+		Failure
+			everything left has at least K neighbors
+				sometimes still K-colorable (NP-complete problem)
+
+
+-------------Local Optimizations-------------
+Optimizations
+	Local
+	Global
+	Interprocedural
+
+Finding "optimal optimization" is NP complete problem
+
+Loop transformations
+	- loop interchange
+	- loop unrolling
+	- loop fusion
+
+Statement level optimizations
+	- constant propagation and folding
+	- loop invariant code motion
+	- partial redundancy elimination
+	- partial dead code elimination
+	- register allocation
