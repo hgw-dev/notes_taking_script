@@ -7,7 +7,7 @@
 
 # TODO: Dynamic to install dir 
 function notes {
-	eval $(parse_yaml config.yaml)
+	source config.yaml
 	echo $dir
     'python3' '/home/hunter/Documents/notes_taking_script/app.py' $@
 }

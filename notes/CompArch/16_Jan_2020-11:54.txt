@@ -1,0 +1,13 @@
+
+    ## Thursday January 16, 2020 ##
+
+we use the Von Neumann model/ architecture
+	- also called 'stored program computer' 
+	- stored program
+		- instructions stored in a linear memory array
+		- memory is unified between instructions and data
+		- interpretation of stored value depends on control signals
+	- sequential instruction processing
+		- one instruction processed (fetched, executed, completed) at a time
+		- program counter (instruction pointer) identifies current instr.
+		- program counter is advanced sequentially except for control transfer instructions
