@@ -1,0 +1,50 @@
+
+    ## Thursday February 13, 2020 ##
+  
+ spin lock problems
+ 	- lock abstraction not powerful enough
+ 		cant handle "wait for event"
+	- waste CPU time
+	- clogs shared bus 
+
+three extensions:
+	- barriers
+	- reader/writer locks
+	- general:
+		- condition variables/monitors
+		- counting semaphores
+
+barrier 
+	- Initialize(num_threads) 
+	- Wait() (returns after all threads have waited)
+	- mult. threads perform comp in parallel 
+	- threads wait for *all other threads* to call Wait()
+
+mutexes mix locks with scheduler to prevent CPU time waste
+	- spinlock protects list of waiters from concurrent modification
+	- mutex efficiency uncontended case
+		lock: acquire + release spinlock, see lock is free
+		unlock: acquire + release spinlock, see queue is empty
+		- not much slower than spinlock
+	- additional features:
+		- error checking mutexes
+			cant lock mutexes twice in same thread
+			cant unlock non-locked thread
+		- mutexes can be shared between processes
+	- must be unlocked from same thread it was locked in
+
+monitors and condition variables
+	- monitor:
+		- locks for mutual exclusion
+		- CVs for waiting for event
+			- operations: wait, signal/broadcast
+		- related data structures
+	- monitor = lock + 0 or more CVs + shared data
+	- CV's are containers for lists of waiting threads
+	- CV operations
+		- wait(CV, lock) - unlock lock, *add current thread* to CV and reacquire lock before returning
+		- Broadcast(CV) - remove all from CV 
+			- waiting for CV --> waiting for their turn with lock
+		- Signal(CV) - remove one from CV
+	- NB: locks are not always coordinated with CV
+	

@@ -1,0 +1,163 @@
+
+    ## Thursday January 23, 2020 ##
+
+POSIX CLI features
+	searching for programs
+		ls -l ==> /bin/ls -l
+	running in background 
+		./program &
+	redirection
+		./program > output.txt
+		./program < output.txt
+	pipelines
+		./programA | ./programB
+
+searching
+	PATH env var
+		list of dirs to check in order
+	tries to exec with every dir 
+
+POSIX - everything is a file
+basic operations: open(), read(), write(), close()
+generic file interface
+	open before use
+		setup, access control happens
+	byte-oriented
+		real device isn't byte-oriented? OS maps and hides it
+	explicit close
+	this means there is kernel buffering
+
+keyboard press - 
+	kernel buffers input for program
+	kernel is middle man to queue input 
+	open() is run with init for terminal 
+
+disk isnt byte-oriented (larger read blocks)
+	OS bufferes input and passes it byte-wise to program
+
+OS buffer also goes for write()'s
+	program -> network call,
+		OS buffers output to pass to network when it's ready
+
+read()/write(): move data in/out of buffer
+	actual I/O operations is done by kernel when ready
+block (wait) if buffer is empty (read)/ full(write)
+	default- wait for device to be ready
+	trigger process to stop waiting if needed
+
+application -> std library -> syscall -> kernel file interface -> device drivers -> hardware 
+
+cout and printf have their own buffers. why? 
+	better interface
+		read line
+		formatted input (scanf)
+		formatted output
+	less syscalls (bigger reads/writes) sometimes faster
+		buffering can combine mult in/out library calls into one syscall
+	more portable interface
+		cin, printf defined by C and C++ standards
+		can work on non-POSIX systems  
+
+filesystem abstraction
+	regular files - named collection of bytes
+	directories - folders containing files and directories
+		hierarchical naming
+		mostly regular files or dirs
+
+------OPEN------
+
+open() takes a path, flags, and/or mode
+	based on root dir or cwd
+	returns file descriptor (-1 for err)
+		index into table of "open file descriptors" for each process
+		used by syscalls that deal with open files
+		in xv6, this is an array
+			pointer - can be shared between processes
+			null pinters - no file open with that number
+			array of `struct file`
+
+struct files have
+	- FD_PIPE to talk to other process
+	- reference count
+	- flags for readable/writable
+		set in open()
+	- pipe and ip for actual file redirection implmentations
+	- offset
+		location in files (not meaninful all the time) 
+
+certain indexes into open file descriptors are special by convention
+	constants defined in unistd.h
+		STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO
+
+mode - always use 0666 (readable/writable except where umask prohibits)
+
+------CLOSE------
+
+close the file descriptor, deallocating that array index (set to NULL)
+	does NOT affect other file descriptors
+	that refer to same "open file description"
+
+if last file descriptor for that open file description, resources deallocated
+	files auto close() in exit
+
+returns 0 on success
+	fails if file is not open, ran out of space on disk, etc 
+
+------shell redirection------
+
+exec preservers open files
+fork copies open file list
+	child process has independent list
+
+in child, open new files before exec
+
+after forking, open files to redirect
+	make them be std output/error/input
+		using dup2() 
+			redirects stdout and increments refcount
+			cants access ofile
+			so use syscall(opened-fd, 1)
+			also closes old file
+
+------read/write------
+
+read/write up to count (input) bytes to/from buffer
+
+returns number of bytes processed 
+read returning 0 means end-of-file
+
+on regular file, read() reads what you request
+otherwise, gives whats available
+	after waiting for something to be available
+
+reading from network = whats been received
+reading from network = whats been typed
+
+partial writes are less likely
+	usually only happens on error or interruption
+		can request "non-blocking"
+	usually, write *waits until it completes*
+		= until remaining part fits in buffer in kernel
+		does not mean data was sent on network, shown to user yet, etc
+
+DONT mix stdio/iostream and raw read/write
+	cin/scanf read extra char into a buffer
+		you call read - they disappear
+	cout/printf has output waiting in a buffer
+		you call write - out of order output
+	if you need to: some stdio calls specify that they clear buffers
+
+------pipes------
+
+special kind of file
+bytes go in one end, out the other
+
+created with pipe()
+	intended use: comm btwn processes
+
+pipes have limited buffer size, or can cause deadlocks
+	ls | grep .. 
+		if ls is too fast for grep, ls will slow down
+
+read() only reaches EOF iff nothing can write to it
+	so we have to close write_fd before reading so nothing can write to it

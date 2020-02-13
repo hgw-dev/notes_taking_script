@@ -1,0 +1,93 @@
+
+    ## Tuesday February 11, 2020 ##
+    
+can you use a vector from mult threads?
+	how is it allocated?
+		dynamically
+		reallocated on size changes
+	can access from mult threads ... as long as not append/erase/etc?
+	assuming it's implemented like we expect
+
+	c++ has written rules for containers
+		mult thread can read anything at the same time
+		can only read elem if no other thread is modifying it
+		can safely add/remove elements if not other threads are accessing container
+		exception:
+			vectors of bools- cant safely read and write at same time
+
+implementing locks
+	single core:
+		intuition:
+			- context switch only happens on int
+		solution:
+			- disable them
+				re-enable on unlock
+
+		problems:
+			- can cause system to hang
+			- can't do I/O within lock
+
+	multi core:
+		load/store atomic, but run *out of order*
+		recall? Out of order processors
+			faster
+		track side-effects within a thread to make as if in-order
+			does not happen between cores
+		typically:
+			dont depend on details
+				special instructions with stronger ordering rulers
+				special instructions that restrict ordering of instruction around them ("fences")
+					loads/stores can't cross the fence
+		compilers also do optimizations that interfere with threading 
+
+		many pthreads functions prevent reordering
+			includes preventing some optimizations
+
+		mfence takes 33 cycles on Intel Skylake 
+
+connecting CPUs and memory
+	how do processors communicate with memory?
+		- shared bus
+			- tagged messages - everyone get everything
+				- filters by tags
+			- contention if mult messages
+				- some HW enforces one at a time
+			- scales poorly
+
+		- caches
+			- memory is SLOW
+			- keep local copies of memory
+			- what if mult cores cache same memory?
+				cache coherence problem
+
+"snooping" the bus
+	every processor receives every read/write to memory
+	use messages to clean up "bad" cache entries
+
+	using write-through cache solves this problem
+		other CPUs snoop write message
+		but really slow
+
+keep extra information for every cache blocks
+	stored in cache
+	update states based on reads, writes, and heard messages on bus
+	different caches may have different states for same block
+		MODIFIED - value may be different than memory AND I am the only one that has it
+		SHARED - value is the same as memory
+		INVALID - I don't have the value; I will need to ask for it
+
+	real protocols more complex
+		send messages directly between caches
+		not using a shared bus
+
+false sharing
+	syncing to access two independent things
+	two parts of same cache block
+		solution: separate them
+
+atomic read-modify-write
+	really hard to build locks for atomic load store
+	processors provide such ops
+
+	one ins that atomically reads and modifies and writes back a value
+

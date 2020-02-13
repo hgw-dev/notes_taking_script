@@ -1,0 +1,79 @@
+
+    ## Tuesday January 21, 2020 ##
+    
+========POSIX process management========
+essential information
+process information:
+	- pid_t my_pid = getpid();
+	- process id comes from creation
+		- there is another way, unimportant to this class
+	- process ids in $ps
+
+process creation:
+	- fork() - copies the current process 
+		- returns twice (parent w/ pid of child & child w/ 0)
+		- returns -1 for failure
+		- everything duplicated (deep copy) EXCEPT
+			- memory
+			- file descriptors
+			- registers
+	- init is how the first process is started
+
+running programs:
+	- exec() - replaces current program with new program 
+	- same pid, new process image
+	- int execv(const char *path, const char **argv)
+		path = path to program to run
+		argv = arg array, terminated by null pointer
+			char *args[] = {"ls", "-l", NULL};
+			UNIX convention is that first arg is name of program being run (for debugging args)
+	- if execv returns, something went wrong
+	- exit(1); at the end 
+
+	- create a new stack and heap
+	- reset registers to default values
+	- copy args over to new stack/heap 
+		- old memory discarded
+
+Why not just spawn a new program?
+	- Windows does this with CreateProcess()
+	- POSIX has posix_spawn, but rarely used
+	- UNIX doesnt do this, because we need to set up state (outputs, running directories, etc) before running things like OS
+		- Windows fixes this by having many arguments in CreateProcess() that can do this
+
+	Why fork/exec?
+		- b/c fork() was a mistake
+
+waiting for processes to finish:
+	- waitpid() / wait()
+	pid_t waitpid(pid_t pid, int *status, int options)
+	- waits for child process to finish
+	- sets *status to its "status information"
+	- pid = -1 === wait for any child process instead / first thing that finishes
+	- see options with `man waitpid`
+		- 0 === no options
+
+	return 0; /* or exit(0); */
+		- this goes to the status 
+	wait has several macros to check status
+
+- signals are a way of communicating between processes
+	- also how abnormal termination happens
+- wait's status tells when and what signal killed a program
+	- constants in signal.h
+
+- multiple processes can be run at the same time by using a while loop and an array of child pids
+
+- run `pstree` to see tree structure of processes
+
+- if parent process exits before child?
+	- child's parent pid becomes 1
+- if parent never calls waitpid()?
+	- child process stays around as a 'zombie'
+	- cant reuse pid in case parent wants to use waitpid()
+- if non-parent tries waitpid() for child?
+	- waitpid fails
+
+process destructions: 
+	- exit
+	- kill
