@@ -1,6 +1,0 @@
-
-    ## Monday December 02, 2019 ##
-    
-i3
-dunst
-polybar
